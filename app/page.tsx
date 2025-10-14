@@ -1,103 +1,98 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Sidebar, Upload } from "lucide-react";
+import ToolBar from "@/components/toolbar";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { motion, AnimatePresence } from "framer-motion";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import CodeInput from "@/components/code-input";
+import Editor from "@/components/editor";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    const [sideBar, setSideBar] = useState();
+    const [codeSnippet, setCodeSnippet] = useState<string>();
+    const [activeCodeSnippet, setActiveCodeSnippet] = useState<string>();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    const handleUpload = () => {
+        if (!codeSnippet) return;
+        setActiveCodeSnippet(codeSnippet);
+    };
+
+    return (
+        <div className="w-screen h-screen flex flex-col overflow-hidden">
+            {/* Toolbar always on top */}
+            <div className="h-[10%] w-full overflow-hidden">
+                <AnimatePresence>
+                    {activeCodeSnippet && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
+                        >
+                            <ToolBar setSideBar={setSideBar} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Canvas */}
+            <div className="relative flex-1 flex items-center justify-center overflow-hidden">
+                <AnimatePresence>
+                    {activeCodeSnippet && (
+                        <motion.div
+                            initial={{ x: "100%", opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: "100%", opacity: 0 }}
+                            transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
+                            className="absolute right-0 top-0 bottom-0 w-3/4 p-2"
+                        >
+                            <div className="bg-background w-full h-full rounded-xl" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Textarea container */}
+                <motion.div
+                    initial={false}
+                    animate={{
+                        width: activeCodeSnippet ? "25%" : "50%",
+                        height: activeCodeSnippet ? "100%" : "25%",
+                        borderRadius: activeCodeSnippet ? "0px" : "24px",
+                        x: activeCodeSnippet ? "-150%" : "0%",
+                    }}
+                    transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
+                    className="flex flex-col gap-4 items-center justify-center p-2"
+                >
+                    {!activeCodeSnippet && (
+                        <motion.h1
+                            initial={false}
+                            animate={{
+                                fontSize: activeCodeSnippet ? "1.5rem" : "1.875rem",
+                            }}
+                            transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
+                        >
+                            Paste your React Snippet!
+                        </motion.h1>
+                    )}
+
+                    <Tabs value={sideBar! || "code"} className="h-full w-full flex items-center justify-center">
+                        <TabsContent value="code" className="w-full h-full flex justify-center">
+                            <CodeInput
+                                activeCodeSnippet={activeCodeSnippet}
+                                setCodeSnippet={setCodeSnippet}
+                                handleUpload={handleUpload}
+                            />
+                        </TabsContent>
+                        <TabsContent value="editor" className="w-full h-full">
+                            <Editor />
+                        </TabsContent>
+                    </Tabs>
+                </motion.div>
+            </div >
+        </div >
+    );
 }
+
