@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar, Upload } from "lucide-react";
+import Editor from "@/components/editor";
 import ToolBar from "@/components/toolbar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import CodeInput from "@/components/code-input";
+import LiveCanvas from "@/components/live-canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import CodeInput from "@/components/code-input";
-import Editor from "@/components/editor";
 
 export default function Home() {
     const [sideBar, setSideBar] = useState();
+    const [preset, setPreset] = useState("JSX");
     const [codeSnippet, setCodeSnippet] = useState<string>();
     const [activeCodeSnippet, setActiveCodeSnippet] = useState<string>();
 
@@ -49,7 +48,9 @@ export default function Home() {
                             transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
                             className="absolute right-0 top-0 bottom-0 w-3/4 p-2"
                         >
-                            <div className="bg-background w-full h-full rounded-xl" />
+                            <div className="w-full h-full p-2">
+                                <LiveCanvas codeSnippet={activeCodeSnippet} preset={preset} />
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -84,6 +85,8 @@ export default function Home() {
                                 activeCodeSnippet={activeCodeSnippet}
                                 setCodeSnippet={setCodeSnippet}
                                 handleUpload={handleUpload}
+                                preset={preset}
+                                setPreset={setPreset}
                             />
                         </TabsContent>
                         <TabsContent value="editor" className="w-full h-full">
