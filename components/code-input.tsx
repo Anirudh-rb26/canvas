@@ -21,7 +21,7 @@ const CodeInput = ({ activeCodeSnippet, setCodeSnippet, handleUpload, preset, se
             className="relative w-full h-full"
         >
             <Textarea
-                className="w-full h-full rounded-md resize-none pt-2 pl-2 pr-18 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
+                className="w-full h-full rounded-md resize-none pt-2 pl-2 pr-18 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-white"
                 onChange={(e) => setCodeSnippet(e.target.value)}
                 value={activeCodeSnippet || ""}
             />
