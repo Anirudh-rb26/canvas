@@ -12,7 +12,17 @@ export default function Home() {
     const [sideBar, setSideBar] = useState();
     const [preset, setPreset] = useState("JSX");
     const [codeSnippet, setCodeSnippet] = useState<string>();
+    const [editorActive, setEditorActive] = useState<boolean>(false);
     const [activeCodeSnippet, setActiveCodeSnippet] = useState<string>();
+    const [selectedComponent, setSelectedComponent] = useState<{
+        domPath: string;
+        tagName: string;
+        attributes: Record<string, string>;
+        innerHTML: string;
+        textContent: string;
+        classList: string[];
+    }>();
+
 
     const handleUpload = () => {
         if (!codeSnippet) return;
@@ -31,7 +41,7 @@ export default function Home() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
                         >
-                            <ToolBar setSideBar={setSideBar} />
+                            <ToolBar setSideBar={setSideBar} setEditorActive={setEditorActive} />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -48,8 +58,13 @@ export default function Home() {
                             transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
                             className="absolute right-0 top-0 bottom-0 w-3/4 p-2"
                         >
-                            <div className="w-full h-full p-2">
-                                <LiveCanvas codeSnippet={activeCodeSnippet} preset={preset} />
+                            <div className="w-full h-full">
+                                <LiveCanvas
+                                    codeSnippet={activeCodeSnippet}
+                                    preset={preset}
+                                    editorActive={editorActive}
+                                    setSelectedComponent={setSelectedComponent}
+                                />
                             </div>
                         </motion.div>
                     )}
@@ -90,7 +105,8 @@ export default function Home() {
                             />
                         </TabsContent>
                         <TabsContent value="editor" className="w-full h-full">
-                            <Editor />
+                            {/* <Editor something={ } /> */}
+                            <Editor selectedComponent={selectedComponent} />
                         </TabsContent>
                     </Tabs>
                 </motion.div>

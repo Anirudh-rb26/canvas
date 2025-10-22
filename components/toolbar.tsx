@@ -3,8 +3,13 @@ import { ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ToolBar = ({ setSideBar }: { setSideBar: React.Dispatch<React.SetStateAction<any>> }) => {
+interface ToolbarProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setSideBar: React.Dispatch<React.SetStateAction<any>>
+    setEditorActive: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
     const [selected, setSelected] = useState("Version");
 
     return (
@@ -14,7 +19,7 @@ const ToolBar = ({ setSideBar }: { setSideBar: React.Dispatch<React.SetStateActi
                     <Tabs defaultValue='code'>
                         <TabsList>
                             <TabsTrigger onClick={() => setSideBar("code")} value="code">Code</TabsTrigger>
-                            <TabsTrigger onClick={() => setSideBar("editor")} value="editor">Editor</TabsTrigger>
+                            <TabsTrigger onClick={() => { setSideBar("editor"); setEditorActive(true) }} value="editor">Editor</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className='py-2 px-4 bg-ring rounded-sm'>
@@ -33,7 +38,7 @@ const ToolBar = ({ setSideBar }: { setSideBar: React.Dispatch<React.SetStateActi
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
