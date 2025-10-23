@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React from 'react'
@@ -7,8 +8,16 @@ import { ChevronDown, Upload } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CodeInput = ({ activeCodeSnippet, setCodeSnippet, handleUpload, preset, setPreset }: { activeCodeSnippet: string | undefined, setCodeSnippet: React.Dispatch<React.SetStateAction<any>>, handleUpload: () => void, preset: string | undefined, setPreset: React.Dispatch<React.SetStateAction<any>> }) => {
+interface CodeInputProps {
+    activeCodeSnippet: string | undefined;
+    codeSnippet: string | undefined;
+    setCodeSnippet: React.Dispatch<React.SetStateAction<any>>;
+    handleUpload: () => void, preset: string | undefined;
+    setPreset: React.Dispatch<React.SetStateAction<any>>;
+
+}
+
+const CodeInput = ({ activeCodeSnippet, setCodeSnippet, handleUpload, preset, setPreset, codeSnippet }: CodeInputProps) => {
 
     return (
         <motion.div
@@ -22,8 +31,11 @@ const CodeInput = ({ activeCodeSnippet, setCodeSnippet, handleUpload, preset, se
         >
             <Textarea
                 className="w-full h-full rounded-md resize-none pt-2 pl-2 pr-18 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-white"
-                onChange={(e) => setCodeSnippet(e.target.value)}
-                value={activeCodeSnippet || ""}
+                onChange={(e) => {
+                    console.log("onChange fired:", e.target.value);
+                    setCodeSnippet(e.target.value);
+                }}
+                value={codeSnippet || ""}
             />
             <Button
                 className="bg-ring absolute bottom-6 right-6 rounded-xl shadow-md p-3 hover:bg-blue-600 transition-colors"

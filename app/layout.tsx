@@ -20,6 +20,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={`${raleway.variable} antialiased dark:bg-black`}
+        suppressHydrationWarning={true}
       >
         {children}
       </body>

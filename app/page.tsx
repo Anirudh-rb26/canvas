@@ -98,6 +98,7 @@ export default function Home() {
                         <TabsContent value="code" className="w-full h-full flex justify-center">
                             <CodeInput
                                 activeCodeSnippet={activeCodeSnippet}
+                                codeSnippet={codeSnippet}
                                 setCodeSnippet={setCodeSnippet}
                                 handleUpload={handleUpload}
                                 preset={preset}
