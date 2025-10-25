@@ -18,8 +18,24 @@ const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
                 <div className='px-3 h-full flex items-center justify-between'>
                     <Tabs defaultValue='code'>
                         <TabsList>
-                            <TabsTrigger onClick={() => setSideBar("code")} value="code">Code</TabsTrigger>
-                            <TabsTrigger onClick={() => { setSideBar("editor"); setEditorActive(true) }} value="editor">Editor</TabsTrigger>
+                            <TabsTrigger
+                                onClick={
+                                    () => {
+                                        setSideBar("code");
+                                        setEditorActive(false);
+                                    }}
+                                value="code">
+                                Code
+                            </TabsTrigger>
+                            <TabsTrigger
+                                onClick={() => {
+                                    console.log("Editor tab clicked");
+                                    setSideBar("editor");
+                                    setEditorActive(true)
+                                }}
+                                value="editor">
+                                Editor
+                            </TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className='py-2 px-4 bg-ring rounded-sm'>

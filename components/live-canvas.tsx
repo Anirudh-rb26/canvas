@@ -1,10 +1,8 @@
 "use client"
 
 import * as Babel from '@babel/standalone'
-import type { NodePath } from '@babel/traverse';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import LiveCanvasIframe from './live-canvas-iFrame';
-import { JSXAttribute, JSXOpeningElement } from '@babel/types';
 
 interface LiveCanvasProps {
     codeSnippet: string;
@@ -20,42 +18,16 @@ interface LiveCanvasProps {
     } | undefined>>;
 }
 
-// Define the custom Babel plugin - V0 style
-const addEditableAttributesPlugin = () => ({
-    visitor: {
-        JSXOpeningElement(path: NodePath<JSXOpeningElement>) {
-            // Check if contenteditable already exists
-            const hasContentEditable = path.node.attributes.find(
-                (attr): attr is JSXAttribute =>
-                    attr.type === 'JSXAttribute' &&
-                    attr.name.type === 'JSXIdentifier' &&
-                    attr.name.name === "contentEditable"
-            );
-
-            if (hasContentEditable) return; // Skip if already has it
-
-            // Add contenteditable="false" (for browser behavior)
-            path.node.attributes.push(
-                Babel.packages.types.jsxAttribute(
-                    Babel.packages.types.jsxIdentifier("contenteditable"),
-                    Babel.packages.types.stringLiteral("false")
-                )
-            );
-
-            // Add data-editable="true" (for tracking which elements can be edited)
-            path.node.attributes.push(
-                Babel.packages.types.jsxAttribute(
-                    Babel.packages.types.jsxIdentifier("data-editable"),
-                    Babel.packages.types.stringLiteral("true")
-                )
-            );
-        },
-    },
-});
-
 const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent }: LiveCanvasProps) => {
     const [Component, setComponent] = useState<React.ComponentType | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const extractComponentName = useMemo(() => {
+        return (code: string): string => {
+            const match = code.match(/^(?:const|let|var|function)\s+(\w+)/);
+            return match ? match[1] : 'Sandbox';
+        };
+    }, []);
 
     useEffect(() => {
         try {
@@ -69,17 +41,18 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent }:
                     </div>
                 );`;
 
+            // Transform with Babel
             const transformed = Babel.transform(
                 sandboxCode,
                 {
                     presets: preset === "TSX" ? ['typescript', 'react'] : ['react'],
-                    plugins: [addEditableAttributesPlugin],
                     filename: preset === "TSX" ? 'file.tsx' : 'file.jsx'
                 }
             );
 
             if (!transformed.code) throw new Error('Transformation Failed');
 
+            // Create the component function
             const componentFunction = new Function(
                 'React',
                 `${transformed.code} return ${isComponentDefinition ? extractComponentName(codeSnippet) : 'Sandbox'};`
@@ -87,18 +60,14 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent }:
 
             const generatedComponent = componentFunction(React);
 
+            // Store the component (React will handle state)
             setComponent(() => generatedComponent);
             setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
             setComponent(null);
         }
-    }, [codeSnippet, preset]);
-
-    function extractComponentName(code: string): string {
-        const match = code.match(/^(?:const|let|var|function)\s+(\w+)/);
-        return match ? match[1] : 'Sandbox';
-    }
+    }, [codeSnippet, preset, extractComponentName]);
 
     return (
         <div className='w-full h-full items-center justify-center'>
