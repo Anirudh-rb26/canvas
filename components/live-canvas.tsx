@@ -16,9 +16,17 @@ interface LiveCanvasProps {
         textContent: string;
         classList: string[];
     } | undefined>>;
+    manipulatedComponent: {
+        domPath: string;
+        tagName: string;
+        attributes: Record<string, string>;
+        innerHTML: string;
+        textContent: string;
+        classList: string[];
+    } | undefined;
 }
 
-const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent }: LiveCanvasProps) => {
+const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent, manipulatedComponent }: LiveCanvasProps) => {
     const [Component, setComponent] = useState<React.ComponentType | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +90,7 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent }:
                         Component={Component}
                         editorActive={editorActive}
                         setSelectedComponent={setSelectedComponent}
+                        manipulatedComponent={manipulatedComponent}
                     />
                 </div>
             )}

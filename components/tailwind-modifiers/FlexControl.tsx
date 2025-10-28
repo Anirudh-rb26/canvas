@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuItem } from '../ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,10 @@ interface FlexControlProps {
 
 const FlexControl = ({ type, currentAttribute, className }: FlexControlProps) => {
     const [selected, setSelected] = useState(currentAttribute ? currentAttribute : (type === "justify" ? "Main Axis" : "Cross Axis"));
+
+    useEffect(() => {
+        setSelected(currentAttribute || "none");
+    }, [currentAttribute]);
 
     return (
         <DropdownMenu >

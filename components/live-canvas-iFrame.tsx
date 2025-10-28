@@ -15,12 +15,21 @@ interface LiveCanvasIframeProps {
     textContent: string;
     classList: string[];
   } | undefined>>;
+  manipulatedComponent: {
+    domPath: string;
+    tagName: string;
+    attributes: Record<string, string>;
+    innerHTML: string;
+    textContent: string;
+    classList: string[];
+  } | undefined;
 }
 
 const LiveCanvasIframe = ({
   Component,
   editorActive,
   setSelectedComponent,
+  manipulatedComponent,
 }: LiveCanvasIframeProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Editor from "@/components/editor";
 import ToolBar from "@/components/toolbar";
 import CodeInput from "@/components/code-input";
@@ -22,6 +22,19 @@ export default function Home() {
         textContent: string;
         classList: string[];
     }>();
+    const [manipulatedComponent, setManipulatedComponent] = useState<{
+        domPath: string;
+        tagName: string;
+        attributes: Record<string, string>;
+        innerHTML: string;
+        textContent: string;
+        classList: string[];
+    }>(selectedComponent!);
+
+    useEffect(() => {
+        if (selectedComponent)
+            setManipulatedComponent(selectedComponent);
+    }, [selectedComponent])
 
 
     const handleUpload = () => {
@@ -64,6 +77,7 @@ export default function Home() {
                                     preset={preset}
                                     editorActive={editorActive}
                                     setSelectedComponent={setSelectedComponent}
+                                    manipulatedComponent={manipulatedComponent}
                                 />
                             </div>
                         </motion.div>
@@ -107,7 +121,10 @@ export default function Home() {
                         </TabsContent>
                         <TabsContent value="editor" className="w-full h-full">
                             {/* <Editor something={ } /> */}
-                            <Editor selectedComponent={selectedComponent} />
+                            <Editor
+                                manipulatedComponent={manipulatedComponent}
+                                setManipulatedComponent={setManipulatedComponent}
+                            />
                         </TabsContent>
                     </Tabs>
                 </motion.div>

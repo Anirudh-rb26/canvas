@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 
@@ -9,6 +9,11 @@ interface SizeControlProps {
 
 export default function SizeControl({ inputValue, className }: SizeControlProps) {
     const [value, setValue] = useState(inputValue || undefined);
+
+    useEffect(() => {
+        const match = inputValue?.match(/(\d+)/);
+        setValue(match ? match[1] : "");
+    }, [inputValue]);
 
     return (
         <div className={cn("space-y-2", className)}>

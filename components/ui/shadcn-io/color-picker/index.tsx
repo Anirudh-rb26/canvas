@@ -92,8 +92,15 @@ export const ColorPicker = ({
       setSaturation(color.g);
       setLightness(color.b);
       setAlpha(color.a);
+    } else if (defaultValue) {
+      const color = Color(defaultValue);
+
+      setHue(color.hue() || 0);
+      setSaturation(color.saturationl() || 100);
+      setLightness(color.lightness() || 50);
+      setAlpha(color.alpha() * 100);
     }
-  }, [value]);
+  }, [value, defaultValue]);
 
   // Notify parent of changes
   useEffect(() => {
@@ -136,7 +143,19 @@ export const ColorPickerSelection = memo(
     const [isDragging, setIsDragging] = useState(false);
     const [positionX, setPositionX] = useState(0);
     const [positionY, setPositionY] = useState(0);
-    const { hue, setSaturation, setLightness } = useColorPicker();
+    const { hue, saturation, lightness, setSaturation, setLightness } = useColorPicker();
+
+    useEffect(() => {
+      if (!isDragging) {
+        const x = saturation / 100;
+        const topLightness = x < 0.01 ? 100 : 50 + 50 * (1 - x);
+        const y = 1 - (lightness / topLightness);
+
+        setPositionX(Math.max(0, Math.min(1, x)));
+        setPositionY(Math.max(0, Math.min(1, y)));
+      }
+    }, [saturation, lightness, isDragging]);
+
 
     const backgroundGradient = useMemo(() => {
       return `linear-gradient(0deg, rgba(0,0,0,1), rgba(0,0,0,0)),

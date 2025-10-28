@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from '@/lib/utils';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
@@ -27,6 +27,10 @@ interface TypographyControlProps {
 
 const TypographyControl = ({ type, currentAttribute, className }: TypographyControlProps) => {
     const [selected, setSelected] = useState(currentAttribute || "none");
+
+    useEffect(() => {
+        setSelected(currentAttribute || "none");
+    }, [currentAttribute]);
 
     return (
         <DropdownMenu >
