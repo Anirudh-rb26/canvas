@@ -76,14 +76,15 @@ const LiveCanvasIframe = ({
 
     iframeRef.current.srcdoc = html;
 
+    const iframe = iframeRef.current;
     const handleLoad = () => {
       setIframeReady(true);
     };
 
-    iframeRef.current.addEventListener('load', handleLoad);
+    iframe.addEventListener('load', handleLoad);
 
     return () => {
-      iframeRef.current?.removeEventListener('load', handleLoad);
+      iframe?.removeEventListener('load', handleLoad);
     };
   }, []); // Only run once
 
@@ -104,7 +105,6 @@ const LiveCanvasIframe = ({
       #root textarea,
       #root select {
       cursor: crosshair;
-      pointer-events: none;
     }
       [data-editing="1"] {
         outline: 2px solid #ef4444 !important;
@@ -136,7 +136,7 @@ const LiveCanvasIframe = ({
       // Set up editor click handlers if editor is active
       if (editorActive) {
         setTimeout(() => {
-          setupEditorHandlers(iframeDoc, iframeWindow);
+          setupEditorHandlers(iframeDoc);
         }, 100);
       } else {
         // Clean up editor state when editor is inactive
@@ -153,9 +153,7 @@ const LiveCanvasIframe = ({
     }
   }, [Component, iframeReady, editorActive]);
 
-  // Helper function to set up editor click handlers
-  // Helper function to set up editor click handlers
-  const setupEditorHandlers = (iframeDoc: Document, iframeWindow: Window) => {
+  const setupEditorHandlers = (iframeDoc: Document) => {
     console.log('🔧 Setting up editor handlers');
 
     function getDOMPath(element: Element): string {
@@ -202,38 +200,48 @@ const LiveCanvasIframe = ({
       return path.join(' > ');
     }
 
-    function handleElementClick(event: Event) {
-      console.log('🖱️ Click detected on:', event.target);
-      event.preventDefault();
-      event.stopPropagation();
+    function handleMouseMove(event: MouseEvent) {
+      const element = iframeDoc.elementFromPoint(event.clientX, event.clientY);
 
-      const target = event.target as HTMLElement;
+      if (!element) return;
 
-      // Changed: Select any element inside #root, not just those with contenteditable="false"
       const rootElement = iframeDoc.getElementById('root');
-      if (!rootElement || !rootElement.contains(target)) {
-        console.log('❌ Click outside root element');
+      if (!rootElement || !rootElement.contains(element) || element.id === 'root') {
         return;
       }
 
-      // Find the closest clickable element (skip #root itself)
-      let element = target;
-      if (element.id === 'root') {
-        // If root is clicked, select its first child
-        element = element.firstElementChild as HTMLElement;
-        if (!element) {
-          console.log('❌ No child elements in root');
-          return;
-        }
-      }
-
-      console.log('✅ Selected element:', element.tagName, element.className);
-
+      // Remove previous highlights
       iframeDoc.querySelectorAll('[data-editing]').forEach(el => {
         el.removeAttribute('data-editing');
       });
 
+      // Highlight current element
       element.setAttribute('data-editing', '1');
+    }
+
+    function handleClick(event: MouseEvent) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const element = iframeDoc.elementFromPoint(event.clientX, event.clientY);
+
+      if (!element) {
+        console.log('❌ No element found at point');
+        return;
+      }
+
+      const rootElement = iframeDoc.getElementById('root');
+      if (!rootElement || !rootElement.contains(element)) {
+        console.log('❌ Click outside root element');
+        return;
+      }
+
+      if (element.id === 'root') {
+        console.log('❌ Cannot select root element');
+        return;
+      }
+
+      console.log('✅ Selected element:', element.tagName, (element as HTMLElement).className);
 
       const domPath = getDOMPath(element);
       console.log('📍 DOM Path:', domPath);
@@ -259,11 +267,11 @@ const LiveCanvasIframe = ({
       }, '*');
     }
 
-    // Changed: Attach click handler to the entire document body instead of specific elements
     const rootElement = iframeDoc.getElementById('root');
     if (rootElement) {
-      console.log('✅ Attaching click handler to root element');
-      rootElement.addEventListener('click', handleElementClick);
+      console.log('✅ Attaching handlers to root element');
+      rootElement.addEventListener('mousemove', handleMouseMove);
+      rootElement.addEventListener('click', handleClick);
     } else {
       console.log('❌ Root element not found');
     }
