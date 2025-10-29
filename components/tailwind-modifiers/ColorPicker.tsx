@@ -129,14 +129,14 @@ const CustomColorPicker = ({ color, updateStyle, type }: CustomColorPickerProps)
     };
 
     return (
-        <div className="rounded-md border bg-background p-2 shadow-sm">
+        <div className="">
             <SketchPicker
                 // Use originalColor as the key to force re-mount on external changes
                 key={originalColor}
                 color={manipulatedColor}
                 onChange={handleColorChange}
                 onChangeComplete={handleColorChange}
-            // styles={pickerStyles}
+                styles={pickerStyles}
             />
         </div>
     )

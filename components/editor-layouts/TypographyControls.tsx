@@ -27,7 +27,7 @@ const TypographyControls = ({
         <div className='bg-background w-full rounded-md p-2'>
             <div className='w-full h-full'>
                 <h1 className='pb-3'>Typography</h1>
-                <div className='flex flex-col gap-1 pb-2 h-[300px]'>
+                <div className='flex flex-col gap-1 pb-2 h-[400px]'>
                     <h3 className='text-sm text-muted-foreground'>Text Color</h3>
                     <CustomColorPicker
                         color={color}

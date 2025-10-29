@@ -36,7 +36,7 @@ const LayoutControls = ({
                         updateStyle={(value) => { updateStyle('margin', value) }}
                     />
                 </div>
-                <div className='flex flex-col gap-1 pb-2 h-[300px]'>
+                <div className='flex flex-col gap-1 pb-2 h-[400px]'>
                     <h3 className='text-sm text-muted-foreground'>Background Color</h3>
                     <CustomColorPicker
                         color={backgroundColor}
