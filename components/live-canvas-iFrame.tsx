@@ -97,7 +97,6 @@ const LiveCanvasIframe = ({
     };
   }, []); // Only run once
 
-
   useEffect(() => {
     console.log('Editor active state changed:', editorActive);
     if (!iframeReady || !iframeRef.current?.contentDocument) return;
@@ -161,6 +160,66 @@ const LiveCanvasIframe = ({
       }
     }
   }, [Component, iframeReady, editorActive]);
+
+  // ============================================
+  // NEW: Apply manipulated component changes
+  // ============================================
+  useEffect(() => {
+    if (!iframeReady || !manipulatedComponent || !iframeRef.current?.contentDocument) {
+      return;
+    }
+
+    const iframeDoc = iframeRef.current.contentDocument;
+
+    try {
+      // Find the element using the domPath as a CSS selector
+      const element = iframeDoc.querySelector(manipulatedComponent.domPath);
+
+      if (!element) {
+        console.error('❌ Element not found with path:', manipulatedComponent.domPath);
+        return;
+      }
+
+      console.log('🔄 Updating element:', manipulatedComponent.domPath);
+
+      // 1. Update all attributes (except class - we'll handle that separately)
+      Object.entries(manipulatedComponent.attributes).forEach(([key, value]) => {
+        if (key === 'class') return; // Skip class, handle below
+
+        if (element.getAttribute(key) !== value) {
+          element.setAttribute(key, value);
+          console.log(`  ✅ Updated attribute: ${key} = ${value}`);
+        }
+      });
+
+      // 2. Remove attributes that are no longer present
+      Array.from(element.attributes).forEach(attr => {
+        if (attr.name === 'class') return; // Skip class
+        if (!(attr.name in manipulatedComponent.attributes)) {
+          element.removeAttribute(attr.name);
+          console.log(`  🗑️ Removed attribute: ${attr.name}`);
+        }
+      });
+
+      // 3. Update classList specifically
+      const newClassList = manipulatedComponent.classList.join(' ');
+      if (element.className !== newClassList) {
+        element.className = newClassList;
+        console.log(`  ✅ Updated classList: ${newClassList}`);
+      }
+
+      // 4. Update innerHTML if changed
+      if (element.innerHTML !== manipulatedComponent.innerHTML) {
+        element.innerHTML = manipulatedComponent.innerHTML;
+        console.log(`  ✅ Updated innerHTML`);
+      }
+
+      console.log('✅ Element update complete');
+
+    } catch (error) {
+      console.error('❌ Error updating component:', error);
+    }
+  }, [manipulatedComponent, iframeReady]);
 
   const setupEditorHandlers = (iframeDoc: Document) => {
     console.log('🔧 Setting up editor handlers');
