@@ -1,9 +1,9 @@
-import colors from 'tailwindcss/colors'
-import { formatHex } from 'culori';
-import React, { useEffect, useState, useRef } from 'react'
-import { ColorPicker, ColorPickerSelection, ColorPickerEyeDropper, ColorPickerHue, ColorPickerAlpha, ColorPickerOutput, ColorPickerFormat } from '../ui/shadcn-io/color-picker'
 import Color from 'color';
-
+import { formatHex } from 'culori';
+import colors from 'tailwindcss/colors'
+import { SketchPicker } from 'react-color'
+import React, { useEffect, useState, useRef } from 'react'
+import { pickerStyles } from '@/lib/pickerStyles';
 
 /**
  * Converts OKLCH color format to hex
@@ -11,7 +11,6 @@ import Color from 'color';
 const oklchToHex = (oklch: string): string => {
     return formatHex(oklch) ?? '#000000';
 }
-
 
 /**
  * Converts a Tailwind CSS color class to a hex code
@@ -63,13 +62,13 @@ const tailwindClassToHex = (tailwindClass: string): string | null => {
     return null
 }
 
-
-const rgbaToHex = (rgba: [number, number, number, number]): string => {
-    const [r, g, b, a] = rgba;
+const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
+    console.log('🎨 [ColorPicker] Converting RGBA values:', { r, g, b, a });
     const color = Color.rgb(r, g, b, a);
-    return color.hex();
+    const hexResult = color.hex();
+    console.log('🎨 [ColorPicker] Converted to hex:', hexResult);
+    return hexResult;
 }
-
 
 interface CustomColorPickerProps {
     color: string | null
@@ -77,13 +76,14 @@ interface CustomColorPickerProps {
     updateStyle: (value: string) => void
 }
 
-
 const CustomColorPicker = ({ color, updateStyle, type }: CustomColorPickerProps) => {
     // Extract pure hex from Tailwind class or arbitrary syntax
     const getPureHex = (colorClass: string | null): string => {
+        console.log('🎨 [ColorPicker] Getting pure hex from:', colorClass);
         // Check for arbitrary values like "text-[#155DFC]" or "bg-[#155DFC]"
         const arbitraryMatch = colorClass?.match(/\[(#[0-9A-Fa-f]{6})\]/);
         if (arbitraryMatch) {
+            console.log('🎨 [ColorPicker] Found arbitrary color:', arbitraryMatch[1]);
             return arbitraryMatch[1];
         }
 
@@ -107,7 +107,6 @@ const CustomColorPicker = ({ color, updateStyle, type }: CustomColorPickerProps)
     useEffect(() => {
         if (color !== previousColorPropRef.current) {
             const pureHex = getPureHex(color);
-            console.log('🔵 [ColorPicker] External prop changed:', color, '→ Hex:', pureHex);
 
             // Update BOTH originalColor and manipulatedColor from external source
             setOriginalColor(pureHex);
@@ -116,45 +115,30 @@ const CustomColorPicker = ({ color, updateStyle, type }: CustomColorPickerProps)
         }
     }, [color]);
 
-    const handleColorChange = (rgba: [number, number, number, number]) => {
-        console.log('🟢 [ColorPicker] User interaction, rgba:', rgba);
-
-        const hexCode = rgbaToHex(rgba);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleColorChange = (colorResult: any) => {
+        const { r, g, b, a } = colorResult.rgb;
+        const hexCode = rgbaToHex(r, g, b, a);
 
         // Only update manipulatedColor (NOT originalColor)
         if (hexCode !== manipulatedColor) {
             setManipulatedColor(hexCode);
             const tailwindClass = `${type === 'text' ? 'text-' : 'bg-'}[${hexCode}]`;
-            console.log('🟢 [ColorPicker] Calling updateStyle with:', tailwindClass);
             updateStyle(tailwindClass);
         }
     };
 
     return (
-        <ColorPicker
-            className="max-w-sm rounded-md border bg-background p-4 shadow-sm"
-            // Use originalColor as the key to force re-mount on external changes
-            key={originalColor}
-            defaultValue={originalColor}
-            onChange={(value) => {
-                if (Array.isArray(value) && value.length === 4) {
-                    handleColorChange(value as [number, number, number, number]);
-                }
-            }}
-        >
-            <ColorPickerSelection />
-            <div className="flex items-center gap-4">
-                <ColorPickerEyeDropper />
-                <div className="grid w-full gap-1">
-                    <ColorPickerHue />
-                    <ColorPickerAlpha />
-                </div>
-            </div>
-            <div className="flex items-center gap-2">
-                <ColorPickerOutput />
-                <ColorPickerFormat />
-            </div>
-        </ColorPicker>
+        <div className="rounded-md border bg-background p-2 shadow-sm">
+            <SketchPicker
+                // Use originalColor as the key to force re-mount on external changes
+                key={originalColor}
+                color={manipulatedColor}
+                onChange={handleColorChange}
+                onChangeComplete={handleColorChange}
+            // styles={pickerStyles}
+            />
+        </div>
     )
 }
 

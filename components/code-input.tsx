@@ -32,7 +32,6 @@ const CodeInput = ({ activeCodeSnippet, setCodeSnippet, handleUpload, preset, se
             <Textarea
                 className="w-full h-full rounded-md resize-none pt-2 pl-2 pr-18 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-white"
                 onChange={(e) => {
-                    console.log("onChange fired:", e.target.value);
                     setCodeSnippet(e.target.value);
                 }}
                 value={codeSnippet || ""}

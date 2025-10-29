@@ -39,7 +39,6 @@ const LiveCanvasIframe = ({
   // Memoize the message handler
   const handleMessage = useCallback((event: MessageEvent) => {
     if (event.data.type === 'COMPONENT_SELECTED') {
-      console.log('Selected component DOM path:', event.data.data.domPath);
       setSelectedComponent(event.data.data);
     }
   }, [setSelectedComponent]);
@@ -98,7 +97,6 @@ const LiveCanvasIframe = ({
   }, []); // Only run once
 
   useEffect(() => {
-    console.log('Editor active state changed:', editorActive);
     if (!iframeReady || !iframeRef.current?.contentDocument) return;
 
     const styleElement = iframeRef.current.contentDocument.getElementById('editor-styles');
@@ -154,7 +152,6 @@ const LiveCanvasIframe = ({
       }
 
     } catch (error) {
-      console.error('Error rendering component:', error);
       if (rootElement) {
         rootElement.innerHTML = `<div style="color: red; padding: 20px;">Error: ${error instanceof Error ? error.message : String(error)}</div>`;
       }
@@ -176,11 +173,9 @@ const LiveCanvasIframe = ({
       const element = iframeDoc.querySelector(manipulatedComponent.domPath);
 
       if (!element) {
-        console.error('❌ Element not found with path:', manipulatedComponent.domPath);
         return;
       }
 
-      console.log('🔄 Updating element:', manipulatedComponent.domPath);
 
       // 1. Update all attributes (except class - we'll handle that separately)
       Object.entries(manipulatedComponent.attributes).forEach(([key, value]) => {
@@ -188,7 +183,6 @@ const LiveCanvasIframe = ({
 
         if (element.getAttribute(key) !== value) {
           element.setAttribute(key, value);
-          console.log(`  ✅ Updated attribute: ${key} = ${value}`);
         }
       });
 
@@ -197,7 +191,6 @@ const LiveCanvasIframe = ({
         if (attr.name === 'class') return; // Skip class
         if (!(attr.name in manipulatedComponent.attributes)) {
           element.removeAttribute(attr.name);
-          console.log(`  🗑️ Removed attribute: ${attr.name}`);
         }
       });
 
@@ -205,24 +198,19 @@ const LiveCanvasIframe = ({
       const newClassList = manipulatedComponent.classList.join(' ');
       if (element.className !== newClassList) {
         element.className = newClassList;
-        console.log(`  ✅ Updated classList: ${newClassList}`);
       }
 
       // 4. Update innerHTML if changed
       if (element.innerHTML !== manipulatedComponent.innerHTML) {
         element.innerHTML = manipulatedComponent.innerHTML;
-        console.log(`  ✅ Updated innerHTML`);
       }
 
-      console.log('✅ Element update complete');
 
     } catch (error) {
-      console.error('❌ Error updating component:', error);
     }
   }, [manipulatedComponent, iframeReady]);
 
   const setupEditorHandlers = (iframeDoc: Document) => {
-    console.log('🔧 Setting up editor handlers');
 
     function getDOMPath(element: Element): string {
       const path: string[] = [];
@@ -294,25 +282,20 @@ const LiveCanvasIframe = ({
       const element = iframeDoc.elementFromPoint(event.clientX, event.clientY);
 
       if (!element) {
-        console.log('❌ No element found at point');
         return;
       }
 
       const rootElement = iframeDoc.getElementById('root');
       if (!rootElement || !rootElement.contains(element)) {
-        console.log('❌ Click outside root element');
         return;
       }
 
       if (element.id === 'root') {
-        console.log('❌ Cannot select root element');
         return;
       }
 
-      console.log('✅ Selected element:', element.tagName, (element as HTMLElement).className);
 
       const domPath = getDOMPath(element);
-      console.log('📍 DOM Path:', domPath);
 
       const componentData = {
         domPath: domPath,
@@ -327,7 +310,6 @@ const LiveCanvasIframe = ({
         componentData.attributes[attr.name] = attr.value;
       });
 
-      console.log('📤 Sending component data:', componentData);
 
       window.parent.postMessage({
         type: 'COMPONENT_SELECTED',
@@ -337,11 +319,9 @@ const LiveCanvasIframe = ({
 
     const rootElement = iframeDoc.getElementById('root');
     if (rootElement) {
-      console.log('✅ Attaching handlers to root element');
       rootElement.addEventListener('mousemove', handleMouseMove);
       rootElement.addEventListener('click', handleClick);
     } else {
-      console.log('❌ Root element not found');
     }
   };
 

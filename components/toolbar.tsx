@@ -29,7 +29,6 @@ const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
                             </TabsTrigger>
                             <TabsTrigger
                                 onClick={() => {
-                                    console.log("Editor tab clicked");
                                     setSideBar("editor");
                                     setEditorActive(true)
                                 }}

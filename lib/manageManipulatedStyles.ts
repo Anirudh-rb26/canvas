@@ -191,14 +191,9 @@ export function useManipulatedComponent(
 
   // When originalComponent changes (new selection), parse and initialize manipulated styles
   useEffect(() => {
-    console.log(
-      "🔵 [useManipulatedComponent] originalComponent changed:",
-      originalComponent?.domPath
-    );
     if (originalComponent && originalComponent.domPath !== lastDomPathRef.current) {
       lastDomPathRef.current = originalComponent.domPath;
       const parsed = parseClassList(originalComponent.classList);
-      console.log("🔵 [useManipulatedComponent] Initializing manipulatedStyles:", parsed);
       setManipulatedStyles({ ...parsed });
       setManipulatedComponent(originalComponent);
       isUpdatingRef.current = false;
@@ -213,8 +208,6 @@ export function useManipulatedComponent(
       manipulatedComponent.domPath !== lastDomPathRef.current
     )
       return;
-
-    console.log("🟣 [useManipulatedComponent] Syncing manipulatedComponent with manipulatedStyles");
 
     const defaultValues = [
       "text-black",
@@ -250,9 +243,6 @@ export function useManipulatedComponent(
     const newClassString = newClassList.join(" ");
 
     if (newClassString !== manipulatedComponent.attributes.class) {
-      console.log("🟣 [useManipulatedComponent] classList changed, updating manipulatedComponent");
-      console.log("🟣 [useManipulatedComponent] New classList:", newClassList);
-
       isUpdatingRef.current = true;
       setManipulatedComponent((prev) => ({
         ...prev,
@@ -269,15 +259,11 @@ export function useManipulatedComponent(
   }, [manipulatedStyles, manipulatedComponent, setManipulatedComponent]);
 
   const updateStyle = <K extends keyof ParsedStyles>(key: K, value: string) => {
-    console.log("🟢 [useManipulatedComponent] updateStyle called:", key, "=", value);
-
     setManipulatedStyles((prev) => {
       if (prev[key] === value) {
-        console.log("🟢 [useManipulatedComponent] Value unchanged, skipping update");
         return prev;
       }
       const newStyles = { ...prev, [key]: value };
-      console.log("🟢 [useManipulatedComponent] New manipulatedStyles:", newStyles);
       return newStyles;
     });
   };

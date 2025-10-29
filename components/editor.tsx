@@ -207,17 +207,14 @@ const Editor = ({ originalComponent, manipulatedComponent, setManipulatedCompone
 
     // When originalComponent changes (new selection), parse and store its styles
     useEffect(() => {
-        console.log('🔵 [Editor] originalComponent changed:', originalComponent?.domPath);
         if (originalComponent) {
             const parsed = parseClassList(originalComponent.classList);
-            console.log('🔵 [Editor] Setting originalStyles from originalComponent:', parsed);
             setOriginalStyles(parsed);
         }
     }, [originalComponent]);
 
     const getControlsForTag = (tagName: string) => {
         if (typographyTags.includes(tagName)) {
-            console.log('🟡 [Editor] Rendering TypographyControls with ORIGINAL styles:', originalStyles);
             return <TypographyControls
                 color={originalStyles.textColor}
                 fontWeight={originalStyles.fontWeight}
@@ -230,7 +227,6 @@ const Editor = ({ originalComponent, manipulatedComponent, setManipulatedCompone
         }
 
         if (tagName === "DIV") {
-            console.log('🟡 [Editor] Rendering LayoutControls with ORIGINAL styles:', originalStyles);
             return <LayoutControls
                 padding={originalStyles.padding}
                 margin={originalStyles.margin}
@@ -240,7 +236,6 @@ const Editor = ({ originalComponent, manipulatedComponent, setManipulatedCompone
         }
 
         if (tagName === "BUTTON") {
-            console.log('🟡 [Editor] Rendering ButtonStyleControls with ORIGINAL styles:', originalStyles);
             return <ButtonStyleControls
                 textColor={originalStyles.textColor}
                 fontWeight={originalStyles.fontWeight}
@@ -256,8 +251,6 @@ const Editor = ({ originalComponent, manipulatedComponent, setManipulatedCompone
         }
     };
 
-    console.log('🔴 [Editor] Render - originalStyles.textColor:', originalStyles.textColor);
-    console.log('🔴 [Editor] Render - manipulatedStyles.textColor:', manipulatedStyles.textColor);
 
     return (
         <div className='border border-gray-300 p-2 rounded-sm h-full w-full flex items-center justify-center'>
