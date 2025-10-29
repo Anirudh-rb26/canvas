@@ -4,10 +4,20 @@ import LayoutControls from './editor-layouts/LayoutControls';
 import TypographyControls from './editor-layouts/TypographyControls';
 import ButtonStyleControls from './editor-layouts/ButtonStyleControls';
 import { useEffect, useState } from 'react';
+import { ParsedStyles } from '@/lib/types';
+import { useManipulatedComponent } from '@/lib/manageManipulatedStyles';
 
 const typographyTags = ["H1", "H2", "H3", "H4", "H5", "H6", "P", "SPAN"];
 
 interface EditorProps {
+    originalComponent: {
+        domPath: string;
+        tagName: string;
+        attributes: Record<string, string>;
+        innerHTML: string;
+        textContent: string;
+        classList: string[];
+    } | undefined;
     manipulatedComponent: {
         domPath: string;
         tagName: string;
@@ -24,33 +34,6 @@ interface EditorProps {
         textContent: string;
         classList: string[];
     }>>;
-}
-
-interface ParsedStyles {
-    textColor: string;
-    backgroundColor: string;
-    borderColor: string;
-    textSize: string;
-    fontWeight: string;
-    fontStyle: string;
-    textAlign: string;
-    textDecoration: string;
-    lineHeight: string;
-    letterSpacing: string;
-    display: string;
-    flexDirection: string;
-    justifyContent: string;
-    alignItems: string;
-    gap: string;
-    padding: string;
-    margin: string;
-    width: string;
-    height: string;
-    borderWidth: string;
-    borderRadius: string;
-    shadow: string;
-    opacity: string;
-    textTransform: string;
 }
 
 function parseClassList(classList: string[]): ParsedStyles {
@@ -186,8 +169,16 @@ function parseClassList(classList: string[]): ParsedStyles {
     return parsed;
 }
 
-const Editor = ({ manipulatedComponent, setManipulatedComponent }: EditorProps) => {
-    const [styles, setStyles] = useState<ParsedStyles>({
+const Editor = ({ originalComponent, manipulatedComponent, setManipulatedComponent }: EditorProps) => {
+    // ✅ USE THE HOOK - This replaces all manipulatedStyles logic, useEffects, and updateStyle
+    const { manipulatedStyles, updateStyle } = useManipulatedComponent(
+        originalComponent,
+        manipulatedComponent,
+        setManipulatedComponent
+    );
+
+    // Parse ORIGINAL component styles (source of truth for controls to display)
+    const [originalStyles, setOriginalStyles] = useState<ParsedStyles>({
         textColor: 'text-black',
         backgroundColor: 'bg-transparent',
         borderColor: 'border-gray-200',
@@ -214,90 +205,76 @@ const Editor = ({ manipulatedComponent, setManipulatedComponent }: EditorProps) 
         textTransform: 'normal-case',
     });
 
+    // When originalComponent changes (new selection), parse and store its styles
     useEffect(() => {
-        if (manipulatedComponent) setStyles(parseClassList(manipulatedComponent.classList));
-    }, [manipulatedComponent])
-
-    const updateStyle = (key: string, value: string) => {
-        console.log('Update style:', key, value);
-        setStyles(prev => ({
-            ...prev, [key]: value
-        }));
-
-        setManipulatedComponent(prev => {
-            const newStyles = { ...styles, [key]: value };
-            const newClassList = Object.values(newStyles).filter(cls =>
-                cls &&
-                !cls.includes('transparent') &&
-                !cls.includes('none') &&
-                cls !== 'p-0' &&
-                cls !== 'm-0' &&
-                cls !== 'gap-0' &&
-                cls !== 'border-0'
-            );
-            const newClassString = newClassList.join(' ');
-
-            return {
-                ...prev,
-                classList: newClassList,
-                attributes: {
-                    ...prev.attributes,
-                    class: newClassString
-                }
-            };
-        });
-    }
+        console.log('🔵 [Editor] originalComponent changed:', originalComponent?.domPath);
+        if (originalComponent) {
+            const parsed = parseClassList(originalComponent.classList);
+            console.log('🔵 [Editor] Setting originalStyles from originalComponent:', parsed);
+            setOriginalStyles(parsed);
+        }
+    }, [originalComponent]);
 
     const getControlsForTag = (tagName: string) => {
         if (typographyTags.includes(tagName)) {
+            console.log('🟡 [Editor] Rendering TypographyControls with ORIGINAL styles:', originalStyles);
             return <TypographyControls
-                textColor={styles.textColor}
-                fontWeight={styles.fontWeight}
-                fontSize={styles.textSize}
-                textAlign={styles.textAlign}
-                textTransform={styles.textTransform}
-                textDecoration={styles.textDecoration}
+                color={originalStyles.textColor}
+                fontWeight={originalStyles.fontWeight}
+                fontSize={originalStyles.textSize}
+                textAlign={originalStyles.textAlign}
+                textTransform={originalStyles.textTransform}
+                textDecoration={originalStyles.textDecoration}
                 updateStyle={updateStyle}
             />;
         }
 
         if (tagName === "DIV") {
+            console.log('🟡 [Editor] Rendering LayoutControls with ORIGINAL styles:', originalStyles);
             return <LayoutControls
-                padding={styles.padding}
-                margin={styles.margin}
-                backgroundColor={styles.backgroundColor}
+                padding={originalStyles.padding}
+                margin={originalStyles.margin}
+                backgroundColor={originalStyles.backgroundColor}
                 updateStyle={updateStyle}
             />;
         }
 
         if (tagName === "BUTTON") {
+            console.log('🟡 [Editor] Rendering ButtonStyleControls with ORIGINAL styles:', originalStyles);
             return <ButtonStyleControls
-                textColor={styles.textColor}
-                fontWeight={styles.fontWeight}
-                fontSize={styles.textSize}
-                textAlign={styles.textAlign}
-                textTransform={styles.textTransform}
-                textDecoration={styles.textDecoration}
-                padding={styles.padding}
-                margin={styles.margin}
-                backgroundColor={styles.backgroundColor}
+                textColor={originalStyles.textColor}
+                fontWeight={originalStyles.fontWeight}
+                fontSize={originalStyles.textSize}
+                textAlign={originalStyles.textAlign}
+                textTransform={originalStyles.textTransform}
+                textDecoration={originalStyles.textDecoration}
+                padding={originalStyles.padding}
+                margin={originalStyles.margin}
+                backgroundColor={originalStyles.backgroundColor}
                 updateStyle={updateStyle}
             />;
         }
     };
 
+    console.log('🔴 [Editor] Render - originalStyles.textColor:', originalStyles.textColor);
+    console.log('🔴 [Editor] Render - manipulatedStyles.textColor:', manipulatedStyles.textColor);
 
     return (
         <div className='border border-gray-300 p-2 rounded-sm h-full w-full flex items-center justify-center'>
-            {!manipulatedComponent && (
+            {!originalComponent && (
                 <h1 className='text-gray-300'>Select A Component to Edit</h1>
             )}
-            {manipulatedComponent && (
+            {originalComponent && (
                 <div className='h-full w-full bg-black flex flex-col'>
                     <ScrollArea className='h-full w-full'>
                         <div className='flex flex-col items-start gap-3 h-full w-full'>
+                            <p className='text-red-500'>Original Component</p>
+                            <pre>{JSON.stringify(originalComponent, null, 2)}</pre>
+                            <p className='text-red-500'>Manipulated Component</p>
                             <pre>{JSON.stringify(manipulatedComponent, null, 2)}</pre>
-                            {getControlsForTag(manipulatedComponent.tagName.toUpperCase())}
+                            <p className='text-yellow-500'>Original textColor: {originalStyles.textColor}</p>
+                            <p className='text-green-500'>Manipulated textColor: {manipulatedStyles.textColor}</p>
+                            {getControlsForTag(originalComponent.tagName.toUpperCase())}
                         </div>
                     </ScrollArea>
                 </div>

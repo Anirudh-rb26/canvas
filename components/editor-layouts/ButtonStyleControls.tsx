@@ -1,6 +1,7 @@
 import React from 'react'
 import LayoutControls from './LayoutControls'
 import TypographyControls from './TypographyControls'
+import { ParsedStyles } from '@/lib/types';
 
 interface ButtonStyleControlsProps {
     padding: string | null;
@@ -14,7 +15,7 @@ interface ButtonStyleControlsProps {
     textTransform: string | null;
     textDecoration: string | null;
 
-    updateStyle: (key: string, value: string) => void;
+    updateStyle: (key: keyof ParsedStyles, value: string) => void;
 }
 
 const ButtonStyleControls = ({
@@ -39,7 +40,7 @@ const ButtonStyleControls = ({
                     updateStyle={updateStyle}
                 />
                 <TypographyControls
-                    textColor={textColor || "none"}
+                    color={textColor || "none"}
                     fontWeight={fontWeight || "none"}
                     fontSize={fontSize || "none"}
                     textAlign={textAlign || "none"}

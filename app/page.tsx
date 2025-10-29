@@ -8,13 +8,22 @@ import LiveCanvas from "@/components/live-canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 
+type ComponentType = {
+    domPath: string;
+    tagName: string;
+    attributes: Record<string, string>;
+    innerHTML: string;
+    textContent: string;
+    classList: string[];
+};
+
 export default function Home() {
     const [sideBar, setSideBar] = useState();
     const [preset, setPreset] = useState("JSX");
     const [codeSnippet, setCodeSnippet] = useState<string>();
     const [editorActive, setEditorActive] = useState<boolean>(false);
     const [activeCodeSnippet, setActiveCodeSnippet] = useState<string>();
-    const [selectedComponent, setSelectedComponent] = useState<{
+    const [originalComponent, setOriginalComponent] = useState<{
         domPath: string;
         tagName: string;
         attributes: Record<string, string>;
@@ -22,19 +31,20 @@ export default function Home() {
         textContent: string;
         classList: string[];
     }>();
-    const [manipulatedComponent, setManipulatedComponent] = useState<{
-        domPath: string;
-        tagName: string;
-        attributes: Record<string, string>;
-        innerHTML: string;
-        textContent: string;
-        classList: string[];
-    }>(selectedComponent!);
+
+    const [manipulatedComponent, setManipulatedComponent] = useState<ComponentType>({
+        domPath: '',
+        tagName: '',
+        attributes: {},
+        innerHTML: '',
+        textContent: '',
+        classList: []
+    });
 
     useEffect(() => {
-        if (selectedComponent)
-            setManipulatedComponent(selectedComponent);
-    }, [selectedComponent])
+        if (originalComponent)
+            setManipulatedComponent(originalComponent);
+    }, [originalComponent])
 
 
     const handleUpload = () => {
@@ -76,7 +86,7 @@ export default function Home() {
                                     codeSnippet={activeCodeSnippet}
                                     preset={preset}
                                     editorActive={editorActive}
-                                    setSelectedComponent={setSelectedComponent}
+                                    setSelectedComponent={setOriginalComponent}
                                     manipulatedComponent={manipulatedComponent}
                                 />
                             </div>
@@ -84,7 +94,6 @@ export default function Home() {
                     )}
                 </AnimatePresence>
 
-                {/* Textarea container */}
                 <motion.div
                     initial={false}
                     animate={{
@@ -122,6 +131,7 @@ export default function Home() {
                         <TabsContent value="editor" className="w-full h-full">
                             {/* <Editor something={ } /> */}
                             <Editor
+                                originalComponent={originalComponent}
                                 manipulatedComponent={manipulatedComponent}
                                 setManipulatedComponent={setManipulatedComponent}
                             />

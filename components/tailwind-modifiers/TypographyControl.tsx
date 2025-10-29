@@ -23,14 +23,41 @@ interface TypographyControlProps {
     type: 'fontWeight' | 'fontSize' | 'textAlign' | 'textTransform' | 'textDecoration';
     className?: string;
     currentAttribute?: string | null;
+    updateStyle: (value: string) => void;
 }
 
-const TypographyControl = ({ type, currentAttribute, className }: TypographyControlProps) => {
+const TypographyControl = ({ type, currentAttribute, className, updateStyle }: TypographyControlProps) => {
     const [selected, setSelected] = useState(currentAttribute || "none");
 
     useEffect(() => {
         setSelected(currentAttribute || "none");
     }, [currentAttribute]);
+
+    const handleSelect = (option: string) => {
+        let styleValue = '';
+
+        switch (type) {
+            case 'fontWeight':
+                styleValue = `font-${option}`;
+                break;
+            case 'fontSize':
+                styleValue = `text-${option}`;
+                break;
+            case 'textAlign':
+                styleValue = `text-${option}`;
+                break;
+            case 'textTransform':
+                styleValue = option; // uppercase, lowercase, capitalize, normal-case
+                break;
+            case 'textDecoration':
+                styleValue = option === 'none' ? 'no-underline' : option; // underline, line-through
+                break;
+        }
+
+        setSelected(option);
+        updateStyle(styleValue);
+    }
+
 
     return (
         <DropdownMenu >
@@ -42,7 +69,12 @@ const TypographyControl = ({ type, currentAttribute, className }: TypographyCont
             </DropdownMenuTrigger>
             <DropdownMenuContent className='w-full'>
                 {OPTIONS[type].map((option) => (
-                    <DropdownMenuItem className='w-full' key={option} onClick={() => setSelected(option)} >{option}</DropdownMenuItem>
+                    <DropdownMenuItem
+                        className='w-full' key={option}
+                        onClick={() => handleSelect(option)}
+                    >
+                        {option}
+                    </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>
         </DropdownMenu>

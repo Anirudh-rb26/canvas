@@ -1,12 +1,13 @@
 import React from 'react'
 import SizeControl from '../tailwind-modifiers/Sizing'
 import CustomColorPicker from '../tailwind-modifiers/ColorPicker'
+import { ParsedStyles } from '@/lib/types';
 
 interface LayoutControlprops {
     padding: string | null;
     margin: string | null;
     backgroundColor: string | null;
-    updateStyle: (key: string, value: string) => void;
+    updateStyle: (key: keyof ParsedStyles, value: string) => void;
 }
 
 const LayoutControls = ({

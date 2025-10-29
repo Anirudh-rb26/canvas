@@ -1,7 +1,7 @@
 'use client';
 
 import Color from 'color';
-import { PipetteIcon } from 'lucide-react';
+import { Pipette } from 'lucide-react';
 import { Slider } from 'radix-ui';
 import {
   type ComponentProps,
@@ -83,28 +83,40 @@ export const ColorPicker = ({
   );
   const [mode, setMode] = useState('hex');
 
+  // Track if we're updating from external value change
+  const isExternalUpdate = useRef(false);
+  const previousValue = useRef(value);
+
   // Update color when controlled value changes
   useEffect(() => {
-    if (value) {
+    if (value && value !== previousValue.current) {
+      isExternalUpdate.current = true;
       const color = Color.rgb(value).rgb().object();
 
       setHue(color.r);
       setSaturation(color.g);
       setLightness(color.b);
       setAlpha(color.a);
-    } else if (defaultValue) {
+
+      previousValue.current = value;
+      isExternalUpdate.current = false;
+    } else if (defaultValue && !previousValue.current) {
+      isExternalUpdate.current = true;
       const color = Color(defaultValue);
 
       setHue(color.hue() || 0);
       setSaturation(color.saturationl() || 100);
       setLightness(color.lightness() || 50);
       setAlpha(color.alpha() * 100);
+
+      previousValue.current = defaultValue;
+      isExternalUpdate.current = false;
     }
   }, [value, defaultValue]);
 
-  // Notify parent of changes
+  // Notify parent of changes (but not during external updates)
   useEffect(() => {
-    if (onChange) {
+    if (onChange && !isExternalUpdate.current) {
       const color = Color.hsl(hue, saturation, lightness).alpha(alpha / 100);
       const rgba = color.rgb().array();
 
@@ -322,7 +334,7 @@ export const ColorPickerEyeDropper = ({
       type="button"
       {...props}
     >
-      <PipetteIcon size={16} />
+      <Pipette size={16} />
     </Button>
   );
 };
