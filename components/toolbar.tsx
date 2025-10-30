@@ -11,16 +11,23 @@ interface ToolbarProps {
     setEditorActive: React.Dispatch<React.SetStateAction<boolean>>
     onApplyChanges: () => void;
     codeSnippetref: string;
+    setCodeSnippet: React.Dispatch<React.SetStateAction<string | undefined>>;
+    setActiveCodeSnippet: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
-const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges, codeSnippetref }: ToolbarProps) => {
+const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges, codeSnippetref, setCodeSnippet, setActiveCodeSnippet }: ToolbarProps) => {
     const [selected, setSelected] = useState(1);
 
 
     useEffect(() => {
         console.log("Selected version:", selected);
-        fetchSnippet("1", selected)
-    }, [selected])
+        fetchSnippet("1", selected).then(newCode => {
+            if (newCode && newCode.snippet) {
+                setCodeSnippet(newCode.snippet);
+                setActiveCodeSnippet(newCode.snippet);
+            }
+        });
+    }, [selected, setCodeSnippet, setActiveCodeSnippet])
 
     return (
         <div className='w-full h-[10%] absolute p-2'>

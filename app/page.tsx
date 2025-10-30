@@ -166,6 +166,8 @@ export default function Home() {
                                 setEditorActive={setEditorActive}
                                 onApplyChanges={applyCodeChanges}
                                 codeSnippetref={displayCodeSnippetRef.current}
+                                setCodeSnippet={setCodeSnippet}
+                                setActiveCodeSnippet={setActiveCodeSnippet}
                             />
                         </motion.div>
                     )}
