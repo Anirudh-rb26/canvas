@@ -7,9 +7,10 @@ interface ToolbarProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setSideBar: React.Dispatch<React.SetStateAction<any>>
     setEditorActive: React.Dispatch<React.SetStateAction<boolean>>
+    onApplyChanges: () => void;
 }
 
-const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
+const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges }: ToolbarProps) => {
     const [selected, setSelected] = useState("Version");
 
     return (
@@ -22,6 +23,7 @@ const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
                                 onClick={
                                     () => {
                                         setSideBar("code");
+                                        onApplyChanges();
                                         setEditorActive(false);
                                     }}
                                 value="code">
@@ -30,6 +32,7 @@ const ToolBar = ({ setSideBar, setEditorActive }: ToolbarProps) => {
                             <TabsTrigger
                                 onClick={() => {
                                     setSideBar("editor");
+                                    onApplyChanges();
                                     setEditorActive(true)
                                 }}
                                 value="editor">

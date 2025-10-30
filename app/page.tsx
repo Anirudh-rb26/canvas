@@ -39,34 +39,48 @@ export default function Home() {
     const isUpdatingCodeRef = useRef(false);
     const lastManipulatedComponentRef = useRef<string>("");
 
-    // Handle originalComponent updates
+    // NEW: Track the "display" code separately from the "active" code
+    const displayCodeSnippetRef = useRef<string>("");
+
+    // Handle originalComponent updates with batching
     useEffect(() => {
         if (originalComponent) {
-            setManipulatedComponent(originalComponent);
-        }
-    }, [originalComponent]);
+            // When selecting a NEW component, apply previous changes first
+            if (displayCodeSnippetRef.current && displayCodeSnippetRef.current !== activeCodeSnippet) {
+                setActiveCodeSnippet(displayCodeSnippetRef.current);
+            }
 
-    // Handle tab switching
+            Promise.resolve().then(() => {
+                setManipulatedComponent(originalComponent);
+            });
+        }
+    }, [originalComponent, activeCodeSnippet]);
+
+    // Handle tab switching with batched updates
     useEffect(() => {
-        // When switching back to editor view
         if (sideBar === 'editor' && activeCodeSnippet) {
-            // Reset component states to force re-selection from iframe
-            setOriginalComponent(undefined);
-            setManipulatedComponent({
-                domPath: '',
-                tagName: '',
-                attributes: {},
-                innerHTML: '',
-                textContent: '',
-                classList: []
+            // Apply code changes before switching to preserve styles
+            if (displayCodeSnippetRef.current && displayCodeSnippetRef.current !== activeCodeSnippet) {
+                setActiveCodeSnippet(displayCodeSnippetRef.current);
+            }
+
+            Promise.resolve().then(() => {
+                setOriginalComponent(undefined);
+                setManipulatedComponent({
+                    domPath: '',
+                    tagName: '',
+                    attributes: {},
+                    innerHTML: '',
+                    textContent: '',
+                    classList: []
+                });
             });
         }
     }, [sideBar, activeCodeSnippet]);
 
-    // Sync code when manipulatedComponent changes
+    // Sync code when manipulatedComponent changes - BUT DON'T UPDATE activeCodeSnippet
     useEffect(() => {
-        if (!manipulatedComponent.domPath || !activeCodeSnippet) return;
-        if (isUpdatingCodeRef.current) return;
+        if (!manipulatedComponent.domPath || !activeCodeSnippet || isUpdatingCodeRef.current) return;
 
         const manipulatedString = JSON.stringify({
             domPath: manipulatedComponent.domPath,
@@ -78,34 +92,61 @@ export default function Home() {
 
         if (manipulatedString === lastManipulatedComponentRef.current) return;
 
-        lastManipulatedComponentRef.current = manipulatedString;
+        const updateCode = () => {
+            try {
+                isUpdatingCodeRef.current = true;
+                lastManipulatedComponentRef.current = manipulatedString;
 
-        try {
-            isUpdatingCodeRef.current = true;
-            const updatedCode = updateCodeWithManipulation(
-                activeCodeSnippet,
-                manipulatedComponent,
-                preset
-            );
+                const sourceCode = activeCodeSnippet;
+                const updatedCode = updateCodeWithManipulation(
+                    sourceCode,
+                    manipulatedComponent,
+                    preset
+                );
 
-            if (updatedCode && updatedCode !== activeCodeSnippet) {
-                // Update both code states together
-                setActiveCodeSnippet(updatedCode);
-                setCodeSnippet(updatedCode);
+                if (updatedCode && updatedCode !== sourceCode) {
+                    // CHANGED: Only update codeSnippet (for display in editor), 
+                    // NOT activeCodeSnippet (which triggers iframe re-render)
+                    Promise.resolve().then(() => {
+                        setCodeSnippet(updatedCode);
+                        displayCodeSnippetRef.current = updatedCode;
+                    });
+                }
+            } catch (error) {
+                console.error('Error syncing code:', error);
+            } finally {
+                Promise.resolve().then(() => {
+                    isUpdatingCodeRef.current = false;
+                });
             }
-        } catch (error) {
-            console.error('Error syncing code:', error);
-        } finally {
-            isUpdatingCodeRef.current = false;
-        }
+        };
+
+        updateCode();
     }, [manipulatedComponent, activeCodeSnippet, preset]);
 
     const handleUpload = () => {
         if (!codeSnippet) return;
         setActiveCodeSnippet(codeSnippet);
+        displayCodeSnippetRef.current = codeSnippet;
         // Reset refs when uploading new code
         lastManipulatedComponentRef.current = "";
         isUpdatingCodeRef.current = false;
+    };
+
+    // NEW: Function to apply the display code to active code (when user manually wants to sync)
+    const applyCodeChanges = () => {
+        if (displayCodeSnippetRef.current) {
+            setActiveCodeSnippet(displayCodeSnippetRef.current);
+            setOriginalComponent(undefined);
+            setManipulatedComponent({
+                domPath: '',
+                tagName: '',
+                attributes: {},
+                innerHTML: '',
+                textContent: '',
+                classList: []
+            });
+        }
     };
 
     return (
@@ -120,7 +161,11 @@ export default function Home() {
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.6, ease: [0.25, 0.8, 0.25, 1] }}
                         >
-                            <ToolBar setSideBar={setSideBar} setEditorActive={setEditorActive} />
+                            <ToolBar
+                                setSideBar={setSideBar}
+                                setEditorActive={setEditorActive}
+                                onApplyChanges={applyCodeChanges}
+                            />
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -193,7 +238,7 @@ export default function Home() {
                         </TabsContent>
                     </Tabs>
                 </motion.div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import * as Babel from '@babel/standalone'
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import LiveCanvasIframe from './live-canvas-iFrame';
 
 interface LiveCanvasProps {
@@ -27,7 +27,6 @@ interface LiveCanvasProps {
 }
 
 const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent, manipulatedComponent }: LiveCanvasProps) => {
-    const [Component, setComponent] = useState<React.ComponentType | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const extractComponentName = useMemo(() => {
@@ -37,15 +36,15 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent, m
         };
     }, []);
 
-    useEffect(() => {
+    const generateComponent = useCallback((code: string) => {
         try {
-            const isComponentDefinition = /^(const|let|var|function)\s+\w+\s*=/.test(codeSnippet.trim());
+            const isComponentDefinition = /^(const|let|var|function)\s+\w+\s*=/.test(code.trim());
 
             const sandboxCode = isComponentDefinition
-                ? codeSnippet
+                ? code
                 : `const Sandbox = () => (
                     <div>
-                        ${codeSnippet}
+                        ${code}
                     </div>
                 );`;
 
@@ -63,19 +62,26 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent, m
             // Create the component function
             const componentFunction = new Function(
                 'React',
-                `${transformed.code} return ${isComponentDefinition ? extractComponentName(codeSnippet) : 'Sandbox'};`
+                `${transformed.code} return ${isComponentDefinition ? extractComponentName(code) : 'Sandbox'};`
             );
 
-            const generatedComponent = componentFunction(React);
+            return componentFunction(React);
+        } catch (err) {
+            throw err;
+        }
+    }, [preset, extractComponentName]);
 
-            // Store the component (React will handle state)
-            setComponent(() => generatedComponent);
+    // Memoize the component generation
+    const memoizedComponent = useMemo(() => {
+        try {
+            const comp = generateComponent(codeSnippet);
             setError(null);
+            return comp;
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
-            setComponent(null);
+            return null;
         }
-    }, [codeSnippet, preset, extractComponentName]);
+    }, [codeSnippet, generateComponent]);
 
     return (
         <div className='w-full h-full items-center justify-center'>
@@ -84,10 +90,10 @@ const LiveCanvas = ({ codeSnippet, preset, editorActive, setSelectedComponent, m
                     Error: {error}
                 </div>
             )}
-            {Component && (
+            {memoizedComponent && (
                 <div className='flex items-center justify-center w-full h-full rounded-md p-2 border border-gray-300'>
                     <LiveCanvasIframe
-                        Component={Component}
+                        Component={memoizedComponent}
                         editorActive={editorActive}
                         setSelectedComponent={setSelectedComponent}
                         manipulatedComponent={manipulatedComponent}

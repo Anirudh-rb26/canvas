@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createRoot } from 'react-dom/client';
 
 interface LiveCanvasIframeProps {
@@ -35,6 +35,7 @@ const LiveCanvasIframe = ({
   const [iframeReady, setIframeReady] = useState(false);
   const rootRef = useRef<any>(null);
   const messageListenerSetup = useRef(false);
+  const previousComponentRef = useRef<React.ComponentType | null>(null);
 
   // Memoize the message handler
   const handleMessage = useCallback((event: MessageEvent) => {
