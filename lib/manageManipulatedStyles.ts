@@ -198,7 +198,8 @@ export function useManipulatedComponent(
       setManipulatedComponent(originalComponent);
       isUpdatingRef.current = false;
     }
-  }, [originalComponent, setManipulatedComponent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalComponent?.domPath]);
 
   // Sync manipulatedStyles to manipulatedComponent
   useEffect(() => {

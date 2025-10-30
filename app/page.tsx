@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Editor from "@/components/editor";
 import ToolBar from "@/components/toolbar";
 import CodeInput from "@/components/code-input";
 import LiveCanvas from "@/components/live-canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import updateCodeWithManipulation from "@/lib/codeSnippetManipulation";
 
 type ComponentType = {
     domPath: string;
@@ -23,14 +24,7 @@ export default function Home() {
     const [codeSnippet, setCodeSnippet] = useState<string>();
     const [editorActive, setEditorActive] = useState<boolean>(false);
     const [activeCodeSnippet, setActiveCodeSnippet] = useState<string>();
-    const [originalComponent, setOriginalComponent] = useState<{
-        domPath: string;
-        tagName: string;
-        attributes: Record<string, string>;
-        innerHTML: string;
-        textContent: string;
-        classList: string[];
-    }>();
+    const [originalComponent, setOriginalComponent] = useState<ComponentType>();
 
     const [manipulatedComponent, setManipulatedComponent] = useState<ComponentType>({
         domPath: '',
@@ -41,15 +35,77 @@ export default function Home() {
         classList: []
     });
 
-    useEffect(() => {
-        if (originalComponent)
-            setManipulatedComponent(originalComponent);
-    }, [originalComponent])
+    // Track if we're currently updating to prevent loops
+    const isUpdatingCodeRef = useRef(false);
+    const lastManipulatedComponentRef = useRef<string>("");
 
+    // Handle originalComponent updates
+    useEffect(() => {
+        if (originalComponent) {
+            setManipulatedComponent(originalComponent);
+        }
+    }, [originalComponent]);
+
+    // Handle tab switching
+    useEffect(() => {
+        // When switching back to editor view
+        if (sideBar === 'editor' && activeCodeSnippet) {
+            // Reset component states to force re-selection from iframe
+            setOriginalComponent(undefined);
+            setManipulatedComponent({
+                domPath: '',
+                tagName: '',
+                attributes: {},
+                innerHTML: '',
+                textContent: '',
+                classList: []
+            });
+        }
+    }, [sideBar, activeCodeSnippet]);
+
+    // Sync code when manipulatedComponent changes
+    useEffect(() => {
+        if (!manipulatedComponent.domPath || !activeCodeSnippet) return;
+        if (isUpdatingCodeRef.current) return;
+
+        const manipulatedString = JSON.stringify({
+            domPath: manipulatedComponent.domPath,
+            attributes: manipulatedComponent.attributes,
+            classList: manipulatedComponent.classList,
+            textContent: manipulatedComponent.textContent,
+            innerHTML: manipulatedComponent.innerHTML
+        });
+
+        if (manipulatedString === lastManipulatedComponentRef.current) return;
+
+        lastManipulatedComponentRef.current = manipulatedString;
+
+        try {
+            isUpdatingCodeRef.current = true;
+            const updatedCode = updateCodeWithManipulation(
+                activeCodeSnippet,
+                manipulatedComponent,
+                preset
+            );
+
+            if (updatedCode && updatedCode !== activeCodeSnippet) {
+                // Update both code states together
+                setActiveCodeSnippet(updatedCode);
+                setCodeSnippet(updatedCode);
+            }
+        } catch (error) {
+            console.error('Error syncing code:', error);
+        } finally {
+            isUpdatingCodeRef.current = false;
+        }
+    }, [manipulatedComponent, activeCodeSnippet, preset]);
 
     const handleUpload = () => {
         if (!codeSnippet) return;
         setActiveCodeSnippet(codeSnippet);
+        // Reset refs when uploading new code
+        lastManipulatedComponentRef.current = "";
+        isUpdatingCodeRef.current = false;
     };
 
     return (
@@ -129,7 +185,6 @@ export default function Home() {
                             />
                         </TabsContent>
                         <TabsContent value="editor" className="w-full h-full">
-                            {/* <Editor something={ } /> */}
                             <Editor
                                 originalComponent={originalComponent}
                                 manipulatedComponent={manipulatedComponent}
@@ -142,4 +197,3 @@ export default function Home() {
         </div >
     );
 }
-
