@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import Editor from "@/components/editor";
 import ToolBar from "@/components/toolbar";
 import CodeInput from "@/components/code-input";
 import LiveCanvas from "@/components/live-canvas";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import updateCodeWithManipulation from "@/lib/codeSnippetManipulation";
+import updateCodeWithManipulation from "@/lib/codeSnippetManipulation"
 
 type ComponentType = {
     domPath: string;
@@ -165,6 +165,7 @@ export default function Home() {
                                 setSideBar={setSideBar}
                                 setEditorActive={setEditorActive}
                                 onApplyChanges={applyCodeChanges}
+                                codeSnippetref={displayCodeSnippetRef.current}
                             />
                         </motion.div>
                     )}
