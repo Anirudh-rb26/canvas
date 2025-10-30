@@ -261,12 +261,12 @@ const Editor = ({ originalComponent, manipulatedComponent, setManipulatedCompone
                 <div className='h-full w-full bg-black flex flex-col'>
                     <ScrollArea className='h-full w-full'>
                         <div className='flex flex-col items-start gap-3 h-full w-full'>
-                            <p className='text-red-500'>Original Component</p>
-                            <pre>{JSON.stringify(originalComponent, null, 2)}</pre>
-                            <p className='text-red-500'>Manipulated Component</p>
-                            <pre>{JSON.stringify(manipulatedComponent, null, 2)}</pre>
-                            <p className='text-yellow-500'>Original textColor: {originalStyles.textColor}</p>
-                            <p className='text-green-500'>Manipulated textColor: {manipulatedStyles.textColor}</p>
+                            {/* <p className='text-red-500'>Original Component</p> */}
+                            {/* <pre>{JSON.stringify(originalComponent, null, 2)}</pre> */}
+                            {/* <p className='text-red-500'>Manipulated Component</p> */}
+                            {/* <pre>{JSON.stringify(manipulatedComponent, null, 2)}</pre> */}
+                            {/* <p className='text-yellow-500'>Original textColor: {originalStyles.textColor}</p>
+                            <p className='text-green-500'>Manipulated textColor: {manipulatedStyles.textColor}</p> */}
                             {getControlsForTag(originalComponent.tagName.toUpperCase())}
                         </div>
                     </ScrollArea>
