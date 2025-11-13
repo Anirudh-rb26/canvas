@@ -1,12 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Button } from './ui/button';
-import { addSnippet, fetchSnippet } from '@/services/addSnippet';
+import { addSnippet, fetchSnippet, getAllVersions } from '@/services/addSnippet';
 
 interface ToolbarProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setSideBar: React.Dispatch<React.SetStateAction<any>>
     setEditorActive: React.Dispatch<React.SetStateAction<boolean>>
     onApplyChanges: () => void;
@@ -16,18 +16,56 @@ interface ToolbarProps {
 }
 
 const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges, codeSnippetref, setCodeSnippet, setActiveCodeSnippet }: ToolbarProps) => {
-    const [selected, setSelected] = useState(1);
+    const [selected, setSelected] = useState<number>(1);
+    const [availableVersions, setAvailableVersions] = useState<number[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
+    const entityId = "1"; // You might want to make this dynamic
 
+    // Load available versions on mount
     useEffect(() => {
-        console.log("Selected version:", selected);
-        fetchSnippet("1", selected).then(newCode => {
+        getAllVersions(entityId).then(versions => {
+            setAvailableVersions(versions);
+            if (versions.length > 0) {
+                // Set the latest version as selected
+                setSelected(versions[versions.length - 1]);
+            }
+        });
+    }, []);
+
+    // Fetch snippet when selected version changes
+    useEffect(() => {
+        if (!selected) return;
+
+        setIsLoading(true);
+        fetchSnippet(entityId, selected).then(newCode => {
+            setIsLoading(false);
             if (newCode && newCode.snippet) {
                 setCodeSnippet(newCode.snippet);
                 setActiveCodeSnippet(newCode.snippet);
             }
+        }).catch(err => {
+            setIsLoading(false);
+            console.error("Error loading version:", err);
         });
-    }, [selected, setCodeSnippet, setActiveCodeSnippet])
+    }, [selected, setActiveCodeSnippet, setCodeSnippet]);
+
+    const handleSaveChanges = async () => {
+        setIsSaving(true);
+        const result = await addSnippet(entityId, codeSnippetref);
+        setIsSaving(false);
+
+        if (result.success && result.version) {
+            // Refresh available versions and select the new version
+            const versions = await getAllVersions(entityId);
+            setAvailableVersions(versions);
+            setSelected(result.version);
+        } else {
+            console.error("Failed to save:", result.error);
+            alert("Failed to save changes: " + result.error);
+        }
+    };
 
     return (
         <div className='w-full h-[10%] absolute p-2'>
@@ -36,12 +74,11 @@ const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges, codeSnippetref, 
                     <Tabs defaultValue='code'>
                         <TabsList>
                             <TabsTrigger
-                                onClick={
-                                    () => {
-                                        setSideBar("code");
-                                        onApplyChanges();
-                                        setEditorActive(false);
-                                    }}
+                                onClick={() => {
+                                    setSideBar("code");
+                                    onApplyChanges();
+                                    setEditorActive(false);
+                                }}
                                 value="code">
                                 Code
                             </TabsTrigger>
@@ -57,25 +94,34 @@ const ToolBar = ({ setSideBar, setEditorActive, onApplyChanges, codeSnippetref, 
                         </TabsList>
                     </Tabs>
                     <div className='flex flex-row gap-3'>
-                        <Button onClick={() => addSnippet("1", codeSnippetref)}>Save Changes</Button>
+                        <Button
+                            onClick={handleSaveChanges}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </Button>
                         <div className='py-2 px-4 bg-ring rounded-sm'>
                             <DropdownMenu>
-                                <DropdownMenuTrigger className='flex flex-row gap-2'>
-                                    version: {selected}
+                                <DropdownMenuTrigger className='flex flex-row gap-2' disabled={isLoading}>
+                                    {isLoading ? "Loading..." : `version: ${selected}`}
                                     <ChevronDown />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className='mr-3 mt-2'>
-                                    <DropdownMenuItem onSelect={() => setSelected(1)}>v1</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setSelected(2)}>v2</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setSelected(3)}>v3</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setSelected(4)}>v4</DropdownMenuItem>
+                                    {availableVersions.map(version => (
+                                        <DropdownMenuItem
+                                            key={version}
+                                            onSelect={() => setSelected(version)}
+                                        >
+                                            v{version}
+                                        </DropdownMenuItem>
+                                    ))}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     )
 }
 

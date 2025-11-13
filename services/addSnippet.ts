@@ -1,12 +1,8 @@
-"use server";
+// CLIENT-SIDE ONLY - calls API routes via fetch
 
-import { cookies } from "next/headers";
-import { fetchSnippet } from "./fetchSnippet";
-import { createClient } from "@/utils/supabase/server";
-
-async function addSnippet(
+async function fetchSnippet(
   entityId: string,
-  snippet: string
+  version?: number
 ): Promise<{
   id: string;
   entity_id: string;
@@ -14,33 +10,65 @@ async function addSnippet(
   snippet: string;
   created_at: string;
 } | null> {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  try {
+    const url = version
+      ? `/api/snippets?entityId=${entityId}&version=${version}`
+      : `/api/snippets?entityId=${entityId}`;
 
-  // Check if this entityId exists in the database
-  const latestSnippet = await fetchSnippet(entityId);
+    const response = await fetch(url);
 
-  // If entityId doesn't exist, create first version (version 1)
-  // If it exists, increment to next version
-  const nextVersion = latestSnippet ? latestSnippet.version + 1 : 1;
+    if (!response.ok) {
+      return null;
+    }
 
-  // Insert new version
-  const { data, error } = await supabase
-    .from("codeversion")
-    .insert({
-      entity_id: entityId,
-      version: nextVersion,
-      snippet: snippet,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error adding snippet:", error);
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching snippet:", error);
     return null;
   }
-
-  return data;
 }
 
-export { fetchSnippet, addSnippet };
+async function addSnippet(
+  entityId: string,
+  snippet: string
+): Promise<{ success: boolean; version?: number; error?: string }> {
+  try {
+    const response = await fetch("/api/snippets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ entityId, snippet }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error };
+    }
+
+    const data = await response.json();
+    return { success: true, version: data.version };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+async function getAllVersions(entityId: string): Promise<number[]> {
+  try {
+    const response = await fetch(`/api/snippets/versions?entityId=${entityId}`);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    return data.versions || [];
+  } catch (error) {
+    return [];
+  }
+}
+
+export { fetchSnippet, addSnippet, getAllVersions };
